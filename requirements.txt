@@ -1,0 +1,7 @@
+requests
+pillow
+git+https://github.com/uwmisl/cupyck@v1.0.0
+tqdm
+h5py
+tables
+unireedsolomon
