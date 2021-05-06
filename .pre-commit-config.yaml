@@ -1,0 +1,57 @@
+repos:
+    #####################################
+    #    Makes code clean and pretty    #
+    #####################################
+-   repo: https://github.com/ambv/black
+    rev: 18.9b0
+    hooks:
+    -   id: black
+        args: [--safe, --line-length=99]
+        name: Prettify Python Code
+        always_run: true
+
+    #####################################
+    #       Sorts module imports        #
+    #####################################
+-   repo: https://github.com/timothycrosley/isort
+    rev: 5.6.4
+    hooks:
+    -   id: isort
+        name: Sort Python Imports
+        always_run: false
+        args: [--multi-line=3, --trailing-comma, --force-grid-wrap=0, --use-parentheses, --line-width=99]
+
+    #####################################
+    #     Strips trailing whitespace    #
+    #####################################
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.0.0
+    hooks:
+    -   id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+    -   id: check-json
+    -   id: pretty-format-json
+        args: [--autofix, --no-sort-keys]
+    -   id: end-of-file-fixer
+
+    #####################################
+    #   Checks for code style issues    #
+    #####################################
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.7.3
+    hooks:
+    -   id: flake8
+        additional_dependencies: [flake8~=3.7.3]
+        args: [--max-line-length=99]
+        name: Check Python Style
+        stages: [push]
+
+    #####################################
+    #  Checks for documentation issues  #
+    #####################################
+-   repo: https://github.com/pycqa/pydocstyle
+    rev: 5.0.2
+    hooks:
+    -   id: pydocstyle
+        name: Check Python Documentation
+        stages: [push]
