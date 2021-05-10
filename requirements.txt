@@ -1,6 +1,10 @@
-requests
-pillow
-tqdm
-h5py
-tables
-unireedsolomon
+requests==2.25.1
+pillow==6.2.2
+tqdm==4.60.0
+h5py==2.10.0
+unireedsolomon==1.0.5
+numpy==1.16.5
+pandas==0.23.4
+matplotlib
+seaborn==0.9.1
+tensorflow

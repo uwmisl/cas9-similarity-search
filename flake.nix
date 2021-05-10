@@ -15,6 +15,11 @@
       flake = false;
     };
 
+    # tensorflow-gpu = {
+    #   url = "https://pypi.org/project/tensorflow-gpu/1.15.0rc2/";
+    #   flake = false;
+    # };
+
     mach-nix = {
       url = github:DavHau/mach-nix;
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,15 +37,20 @@
 
         mach-nix-utils = import mach-nix {
           inherit pkgs;
-          pypiDataRev = pypi-deps-db.rev;
-          pypiDataSha256 = pypi-deps-db.narHash;
+          pypiDataRev = "90885674ac9a4005ec88b05904dc25b653363ab4";
+          pypiDataSha256 = "08q5ii3k1p1azix6mwc3dkqc0l4p4md5zbjrdf9f6p3fyxwqk36g";
         };
 
+        # tensorflow = mach-nix-utils.buildPythonPackage {
+        #     pname = "tensorflow-gpu";
+        #     verson = "1.15.0rc2";
+        # };
+
         python = mach-nix-utils.mkPython {
-          python = "python27";
+          python = "python37";
           requirements = builtins.readFile ./requirements.txt;
           packagesExtra = [
-              pkgs.python
+              #pkgs.python
           ];
         };
 
@@ -50,14 +60,16 @@
 
         app = mach-nix-utils.buildPythonApplication {
           inherit pname version;
-          requirements = ''
-            requests
-            pillow
-            tqdm
-            h5py
-            tables
-            unireedsolomon
-          '';
+          # requirements = ''
+          #   requests
+          #   tqdm
+          #   h5py
+          #   tables
+          #   unireedsolomon
+
+          #   numpy
+          #   matplotlib
+          # '';
           # add missing dependencies whenever necessary.
           packagesExtra = [
             python
