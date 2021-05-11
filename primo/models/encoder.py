@@ -38,13 +38,13 @@ class Encoder:
     }
 
     def __init__(self, model_path = None, **kwargs):
-        for arg, val in _default_sequences.items():
+        for arg, val in list(_default_sequences.items()):
             setattr(self, arg, val)
         
-        for arg, val in self.defaults.items():
+        for arg, val in list(self.defaults.items()):
             setattr(self, arg, val)
             
-        for arg, val in kwargs.items():
+        for arg, val in list(kwargs.items()):
             setattr(self, arg, val)
 
         if model_path is None:

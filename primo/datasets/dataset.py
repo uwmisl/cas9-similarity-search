@@ -1,9 +1,7 @@
 import abc
 import numpy as np
 
-class Dataset(object):
-
-    __metaclass__ = abc.ABCMeta
+class Dataset(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def random_pairs(self, batch_size):

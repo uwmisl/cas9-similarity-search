@@ -163,7 +163,7 @@ class Barcoder(object):
         if self.bits_per_symbol <= 8:
             vals = struct.pack("B" * len(indices), *indices)
         else:
-            vals = map(GF2int, indices)
+            vals = list(map(GF2int, indices))
         return vals
 
     def encoder_vals_to_indices(self, encoder_vals):

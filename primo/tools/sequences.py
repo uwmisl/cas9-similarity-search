@@ -2,7 +2,7 @@ import numpy as np
 
 bases = np.array(list("ATCG"))
 randseq = lambda n: "".join(np.random.choice(bases, n))
-complement = dict(zip("ATCG", "TAGC"))
+complement = dict(list(zip("ATCG", "TAGC")))
 revcomp = lambda s: "".join(reversed([complement[b] for b in s]))
 
 def seq_hdist(s1, s2):
@@ -23,7 +23,7 @@ def onehots_to_seqs(onehots):
 
 def seqs_to_onehots(seqs):
     """Convert strings (N x L) to one-hot sequences (N x L x 4)"""
-    seq_array = np.array(map(list, seqs))
+    seq_array = np.array(list(map(list, seqs)))
     return np.array([(seq_array == b).T for b in bases]).T.astype(int)
 
 
