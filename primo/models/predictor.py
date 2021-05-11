@@ -41,7 +41,7 @@ class Predictor:
 
     def __init__(self, model_path = None, **kwargs):
 
-        for arg, val in kwargs.items():
+        for arg, val in list(kwargs.items()):
             setattr(self, arg, val)
 
         if model_path is None:

@@ -5,7 +5,7 @@ import pandas as pd
 
 from PIL import Image
 
-from dataset import Dataset
+from .dataset import Dataset
 
 class OpenImagesTrain(Dataset):
     def __init__(self, path, switch_every = 1000):

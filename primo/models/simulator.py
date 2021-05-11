@@ -27,10 +27,10 @@ class Simulator:
 
     def __init__(self, sess_or_client, **kwargs):
 
-        for arg, val in self.defaults.items():
+        for arg, val in list(self.defaults.items()):
             setattr(self, arg, val)
 
-        for arg, val in kwargs.items():
+        for arg, val in list(kwargs.items()):
             setattr(self, arg, val)
 
         if isinstance(sess_or_client, cupyck.Client):
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     try:
         session = cupyck.GPUSession(**sess_args)
     except RuntimeError:
-        print "GPU startup failed. falling back to multicore backend."
+        print("GPU startup failed. falling back to multicore backend.")
         session = cupyck.MulticoreSession()
 
     simulator = Simulator(session, **sim_args)
