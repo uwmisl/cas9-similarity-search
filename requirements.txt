@@ -8,6 +8,9 @@ pandas==0.23.4
 matplotlib
 seaborn==0.9.1
 
+ipykernel
+jupyter
+
 opt-einsum==2.3.2 # Required for tensorflow
 # TODO: Replace tensorflow with tensorflow-gpu: https://github.com/uwmisl/cas9-similarity-search/issues/1
-tensorflow
+#tensorflow
