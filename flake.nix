@@ -1,5 +1,5 @@
 {
-  description = "Code driving the UWMISL implementation of DNA similarity-search ";
+  description = "Code driving the UWMISL CAS-9 implementation of DNA similarity-search ";
 
   inputs = {
     nixpkgs = {
@@ -14,11 +14,6 @@
       url = github:DavHau/pypi-deps-db;
       flake = false;
     };
-
-    # tensorflow-gpu = {
-    #   url = "https://pypi.org/project/tensorflow-gpu/1.15.0rc2/";
-    #   flake = false;
-    # };
 
     mach-nix = {
       url = github:DavHau/mach-nix;
@@ -40,11 +35,6 @@
           pypiDataRev = "90885674ac9a4005ec88b05904dc25b653363ab4";
           pypiDataSha256 = "08q5ii3k1p1azix6mwc3dkqc0l4p4md5zbjrdf9f6p3fyxwqk36g";
         };
-
-        # tensorflow = mach-nix-utils.buildPythonPackage {
-        #     pname = "tensorflow-gpu";
-        #     verson = "1.15.0rc2";
-        # };
 
         python = mach-nix-utils.mkPython {
           python = "python37";
