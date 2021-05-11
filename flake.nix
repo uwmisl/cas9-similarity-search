@@ -1,5 +1,5 @@
 {
-  description = "Code driving the UWMISL CAS-9 implementation of DNA similarity-search ";
+  description = "Code driving the UWMISL CAS-9 implementation of DNA similarity-search.";
 
   inputs = {
     nixpkgs = {
@@ -37,7 +37,7 @@
         };
 
         python = mach-nix-utils.mkPython {
-          python = "python37";
+          python = "python27";
           requirements = builtins.readFile ./requirements.txt;
           packagesExtra = [
               #pkgs.python
@@ -50,16 +50,7 @@
 
         app = mach-nix-utils.buildPythonApplication {
           inherit pname version;
-          # requirements = ''
-          #   requests
-          #   tqdm
-          #   h5py
-          #   tables
-          #   unireedsolomon
 
-          #   numpy
-          #   matplotlib
-          # '';
           # add missing dependencies whenever necessary.
           packagesExtra = [
             python

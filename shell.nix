@@ -18,7 +18,7 @@ nixpkgs.mkShell {
     propagatedBuildInputs=[ python ];
 
     shellHook=
-       pathVsCodePythonHook +
+       #pathVsCodePythonHook +
     ''
        exec env zsh
     '' ;
