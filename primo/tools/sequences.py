@@ -6,7 +6,7 @@ import numpy as np
     Note: DNA sequences are always stored from 5' end to 3' end by convention.
 
     5'-AGGT-3'
-    ||||
+       ||||
     3'-TCCA-5'
 
     sequence: 5'-AGGT-3'
