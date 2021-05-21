@@ -62,10 +62,10 @@ class Static(Dataset):
 
 
 
-# TODO: I moved the `keras_batch_generator` function to `primo/datasets/dataset.py` based on the principle of Cohesion-- because it feels like this code is closely tied to the abstract dataset generators. Callie, if there was a specific reason for keeping this function in this notebook in this cell, please correct me. https://github.com/uwmisl/cas9-similarity-search/issues/2
+# TODO: I moved the `keras_batch_generator` function to `primo/datasets/dataset.py` based on the principle of Cohesion-- because it feels like this code is closely tied to the abstract dataset generators. callie, if there was a specific reason for keeping this function in this notebook in this cell, please correct me. https://github.com/uwmisl/cas9-similarity-search/issues/2
 def keras_batch_generator(dataset_batch_generator, similarity_threshold):
     # Yield datasets
-    # TODO: Verify with Callie this understanding is correct https://github.com/uwmisl/cas9-similarity-search/issues/2
+    # TODO: Verify with callie this understanding is correct https://github.com/uwmisl/cas9-similarity-search/issues/2
     while True:
         # This tuple contains:
         # indices: a positive integer uniquely identifying an image. This index is obtained by enumerating all the images in the dataset (before splitting them into test/train/validate datasets)
