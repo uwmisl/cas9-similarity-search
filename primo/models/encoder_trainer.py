@@ -70,7 +70,7 @@ class EncoderTrainer:
 
         def callback(epoch, logs):
             if epoch % refit_every == 0:
-                print()
+                print("")
                 print("refitting...")
                 # get batch of features
                 idx_pairs, feat_pairs = next(predictor_batch_generator)
@@ -95,6 +95,3 @@ class EncoderTrainer:
                 print("predictor loss: %g" % history.history['loss'][-1])
 
         return tf.keras.callbacks.LambdaCallback(on_epoch_end=callback)
-
-
-
