@@ -7,11 +7,11 @@ from . import _default_sequences
 from ..tools import sequences as seqtools
 
 def entropy_regularizer(strength):
-    # TODO: Verify with callie this is correct: https://github.com/uwmisl/cas9-similarity-search/issues/2
     """
-    This function adds some regularization to the model, meaning it penalizes the model for
-    getting 'too complex' so that it learns to chill out. How harshly you punish the model for
-    complexity is mediated by the 'strength' parameter.
+    This function adds some regularization to the model, meaning it penalizes uncertainty in the activations
+    so that it learns to get more confident.
+    The magnitude of the penalty is mediated by the 'strength' parameter.
+
     Parameters
     ----------
     strength : float
@@ -21,6 +21,7 @@ def entropy_regularizer(strength):
     def encoder_entropy(seq_probs):
         seq_probs.shape.assert_is_compatible_with([None, None, 4])
 
+        # Adding a little epsilon (1e-10) so we never take the log of zero (good catch, callie!)
         ent_by_position = -tf.reduce_sum(
             seq_probs * tf.log(seq_probs + 1e-10),
             axis = 2
@@ -41,7 +42,6 @@ def entropy_regularizer(strength):
 class Encoder:
 
     defaults = {
-        # TODO: Verify with callie this is correct: https://github.com/uwmisl/cas9-similarity-search/issues/2
         # The reason the default encoder input is a 4096-dimensional vector is
         # because we're representing our images through an embedding that was learned
         # by a computer vision model known as VGG [1]. We're borrowing the output of the
@@ -59,21 +59,18 @@ class Encoder:
         #
         "input_dim": 4096,
 
-        # TODO: Verify with callie this is correct: https://github.com/uwmisl/cas9-similarity-search/issues/2
         # The feature region of our engineered DNA sequence is 80 nucleotides long.
+        # If you use a shorter or longer DNA sequence for your data, you'll want to change this as well.
         "output_len": 80,
 
         # Regularization penalty post softmax and helps prevent overfitting.
         # This value, 1e-2, was experimentally determined.
-        # Since the output was softmax, a valid range of regularization strength is between 0 and 1.
+        # Since this encoder's output is a softmax, a valid range of regularization strength is between 0 and 1.
         "entropy_reg_strength": 1e-2
     }
 
     def __init__(self, model_path = None, **kwargs):
         """DNA Sequence Encoder. This class handles
-
-        TODO: Verify with callie that our documentation assumptions
-        are correct. https://github.com/uwmisl/cas9-similarity-search/issues/2
 
         Parameters
         ----------
@@ -89,7 +86,6 @@ class Encoder:
         for arg, val in kwargs.items():
             setattr(self, arg, val)
 
-        # TODO: Verify with callie that this '4' is the number of DNA bases. https://github.com/uwmisl/cas9-similarity-search/issues/2
         number_of_bases = len(seqtools.bases)
         if model_path is None:
             self.model = tf.keras.Sequential([
@@ -98,13 +94,12 @@ class Encoder:
                 layers.Reshape([self.output_len, number_of_bases]),
                 layers.Activation('softmax'),
                 layers.Lambda(
-
-                    # TODO: Verify with callie this is correct: https://github.com/uwmisl/cas9-similarity-search/issues/2
                     # Just using the identity because we don't want to transform the softmaxxed output,
                     # we just want to make sure we learn an output encoding that's regularized (i.e. not crazy complex/over-fitting)
                     lambda x: x,
 
-                    # TODO: Verify with callie this is correct: https://github.com/uwmisl/cas9-similarity-search/issues/2
+                    # In inference mode, this does nothing (just passes identity), but when training, this regularizes
+                    # the activations.
                     # Using an "entropy" regulator because we passed the output through a softmax.
                     activity_regularizer=entropy_regularizer(
                         self.entropy_reg_strength
@@ -119,8 +114,8 @@ class Encoder:
         return self.model(X)
 
     def trainable(self, is_trainable):
+        # TODO: This is originally used to freeze the weights while other systems are training, no longer necessary with https://github.com/uwmisl/cas9-similarity-search/issues/3
         # TODO: Python 3: Perhaps we could make this a property? https://github.com/uwmisl/cas9-similarity-search/issues/4
-        # TODO: Verify with callie this is correct: https://github.com/uwmisl/cas9-similarity-search/issues/2
         """Whether to use this model in training mode or inference mode.
 
         Parameters
