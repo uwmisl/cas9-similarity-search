@@ -37,7 +37,7 @@
         };
 
         python = mach-nix-utils.mkPython {
-          python = "python38";
+          python = "python37";
           requirements = builtins.readFile ./requirements.txt;
           packagesExtra = [
               #pkgs.python

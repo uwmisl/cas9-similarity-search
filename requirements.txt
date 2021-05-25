@@ -1,16 +1,16 @@
-requests==2.25.1
+requests
 #pillow==6.2.2
-tqdm==4.60.0
-h5py==2.10.0
-unireedsolomon==1.0.5
+tqdm
+h5py
+unireedsolomon
 numpy
-pandas==0.23.4
+pandas
 matplotlib
-seaborn==0.9.1
+seaborn
 
 ipykernel
-jupyter
-
-opt-einsum==2.3.2 # Required for tensorflow
-# TODO: Replace tensorflow with tensorflow-gpu: https://github.com/uwmisl/cas9-similarity-search/issues/1
-#tensorflow
+notebook
+qtconsole
+ipywidgets
+#opt-einsum==2.3.2 # Required for tensorflow
+tensorflow-gpu==1.15.0
