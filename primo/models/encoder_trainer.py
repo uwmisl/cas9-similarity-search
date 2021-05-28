@@ -67,6 +67,7 @@ class EncoderTrainer:
         refit_every: run the callback every N encoder training epochs (default: 1)
         refit_epochs: the number of epochs to run the yield trainer for during this callback (default: 10)
         """
+        # TODO: Melat maybe look at running the model with different number of epochs? This is low priority.
 
         def callback(epoch, logs):
             if epoch % refit_every == 0:
