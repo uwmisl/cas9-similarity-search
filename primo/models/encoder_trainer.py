@@ -56,7 +56,7 @@ class EncoderTrainer:
         self.model = tf.keras.Model(inputs=X_pairs, outputs=y_h_T)
         self.predictor.trainable(False)
 
-
+    # what is an epoch - Melat - can tune these parameters
     def refit_predictor(self, predictor_batch_generator, simulator, refit_every = 1, refit_epochs = 10):
         """Generate a callback function to refit the yield predictor during encoder training.
 
