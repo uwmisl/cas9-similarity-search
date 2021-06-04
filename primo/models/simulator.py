@@ -1,3 +1,4 @@
+from os import read
 import numpy as np
 import pandas as pd
 
@@ -49,10 +50,11 @@ class Simulator:
         else:
             raise ValueError("must provide valid session or client")
 
+
     def simulate(self, feature_seq_pairs):
         """
         Takes a batch of pairs of feature sequences as a pandas dataframe,
-        simulates the thermodynamic yield from their
+        simulates the thermodynamic yield from their potential hybridization.
 
         """
 
