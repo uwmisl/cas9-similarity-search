@@ -56,7 +56,7 @@ class EncoderTrainer:
         self.model = tf.keras.Model(inputs=X_pairs, outputs=y_h_T)
         self.predictor.trainable(False)
 
-
+    # what is an epoch - Melat - can tune these parameters
     def refit_predictor(self, predictor_batch_generator, simulator, refit_every = 1, refit_epochs = 10):
         """Generate a callback function to refit the yield predictor during encoder training.
 
@@ -67,6 +67,7 @@ class EncoderTrainer:
         refit_every: run the callback every N encoder training epochs (default: 1)
         refit_epochs: the number of epochs to run the yield trainer for during this callback (default: 10)
         """
+        # TODO: Melat maybe look at running the model with different number of epochs? This is low priority.
 
         def callback(epoch, logs):
             if epoch % refit_every == 0:
