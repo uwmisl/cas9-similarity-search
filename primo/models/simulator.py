@@ -7,11 +7,6 @@ import pandas as pd
 
 import primo.models.cas9 as cas9
 
-# TODO: callie q: Lee and Jessica think that we could just plug in the nucleasq simulator into this file,
-# and then it would minimize the amount of work (amount of code changes) in the rest of the workflow. Is our understanding accurate?
-# https://github.com/uwmisl/cas9-similarity-search/issues/2
-# https://github.com/uwmisl/cas9-similarity-search/issues/3
-
 from ..tools import sequences as seqtools
 
 class Simulator:
