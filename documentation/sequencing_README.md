@@ -15,8 +15,8 @@ The label for the query used in the particular experiment. This is the file name
 
 # QT Ratio
 
-TODO: callie q: check for correctness?  https://github.com/uwmisl/cas9-similarity-search/issues/2
 The query:target ratio. This ratio is determined by the number of query molecules: target molecules.
+A subtlety: the number of target molecules is quantified at the dsDNA step (right before the 3 PCR cycles of linear amplification).
 
 
 # dsDNA_conc
