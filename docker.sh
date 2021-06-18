@@ -43,4 +43,4 @@ docker run \
     -v $(pwd):/tf/primo \
     $mounts \
     -e PYTHONPATH=/tf/primo \
-    primo
+    cas9-similarity-search

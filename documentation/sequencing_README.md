@@ -6,11 +6,10 @@ The sequencing index (e.g. C2, C5, C6) refers to a unique sample.
 
 # Encoder
 
-TODO: callie q: What's the encoder in this context? Does this uniquely identify the encoder trained at a given date?  https://github.com/uwmisl/cas9-similarity-search/issues/2
+Uniquely identifies the encoder trained at a given date.
 
 # Query_ID
 
-TODO: callie q: check for correctness?  https://github.com/uwmisl/cas9-similarity-search/issues/2
 The label for the query used in the particular experiment. This is the file name for the query image.
 
 # QT Ratio
@@ -21,14 +20,17 @@ A subtlety: the number of target molecules is quantified at the dsDNA step (righ
 
 # dsDNA_conc
 
-TODO: callie q: check for correctness?  https://github.com/uwmisl/cas9-similarity-search/issues/2
+TODO: yuan q: check for correctness?  https://github.com/uwmisl/cas9-similarity-search/issues/9
 The double stranded DNA concentration in nM. The dsDNA is the partially double stranded target immediately before the query is bound to it.
 
 # n_randomers
 
-TODO: callie q: check for correctness?  https://github.com/uwmisl/cas9-similarity-search/issues/2
+TODO: yuan q: check for correctness? https://github.com/uwmisl/cas9-similarity-search/issues/9
+
 The number of the randomers added to the experiment. Each randomer has the normal conserved regions and the 80nt feature region is randomized. The 30nt ID region is also randomized.
 
 # rep
+
+TODO: yuan q: check for correctness? https://github.com/uwmisl/cas9-similarity-search/issues/9
 
 The replicate number. I.e., the unique identifier for the number of times this exact experiment has been done.
