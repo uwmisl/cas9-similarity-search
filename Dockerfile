@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:1.15.0rc2-gpu-jupyter
+FROM tensorflow/tensorflow:2.5.0-gpu-jupyter
 
 WORKDIR /tf/
 
@@ -15,10 +15,8 @@ RUN chmod -R go+w /tf/.keras
 RUN pip install \
     requests \
     pillow \
-    git+https://github.com/uwmisl/cupyck \
     tqdm \
     h5py \
     tables \
-    unireedsolomon
-
-RUN pip install seaborn
+    unireedsolomon \
+    seaborn
