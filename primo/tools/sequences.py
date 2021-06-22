@@ -97,7 +97,7 @@ def seqs_to_onehots(seqs):
     np.array
         The one-hot encoded sequences.
     """
-    seq_array = np.array(map(list, seqs))
+    seq_array = np.array(list(map(list, seqs)))
     return np.array([(seq_array == b).T for b in bases]).T.astype(int)
 
 
