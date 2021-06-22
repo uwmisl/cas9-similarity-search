@@ -67,7 +67,6 @@ class Encoder:
         # This value, 1e-2, was experimentally determined.
         # Since this encoder's output is a softmax, a valid range of regularization strength is between 0 and 1.
         "entropy_reg_strength": 1e-2
-        # TODO: Melat, we should tune this entropy regularization strength. High priority!
     }
 
     def __init__(self, model_path = None, **kwargs):
