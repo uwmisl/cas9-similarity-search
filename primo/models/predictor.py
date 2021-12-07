@@ -39,6 +39,19 @@ class Predictor:
 
     """
 
+    """
+    1 3 2 4 5
+
+    kernel_size = 3
+    avg_pool
+
+    avg(1, 3, 2) = 2
+    avg(3, 2, 4) = 3
+    avg(2, 4, 5) = 11/3
+
+    sigmod(x) = 1 / (1 + exp(-x))
+    """
+
     def __init__(self, model_path = None, **kwargs):
 
         for arg, val in list(kwargs.items()):

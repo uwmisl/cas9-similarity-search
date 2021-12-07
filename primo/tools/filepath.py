@@ -1,4 +1,4 @@
-# Utilities for location the file paths of import files. 
+# Utilities for location the file paths of import files.
 
 from pathlib import Path
 

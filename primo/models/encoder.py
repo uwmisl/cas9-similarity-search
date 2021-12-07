@@ -86,6 +86,12 @@ class Encoder:
         for arg, val in kwargs.items():
             setattr(self, arg, val)
 
+        """
+        x, y, z ->
+        exp(x) / (exp(x) + exp(y) + exp(z)),
+        exp(y) / (exp(x) + exp(y) + exp(z)),
+        exp(z) / (exp(x) + exp(y) + exp(z)),
+        """
         number_of_bases = len(seqtools.bases)
         if model_path is None:
             self.model = tf.keras.Sequential([
