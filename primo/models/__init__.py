@@ -13,6 +13,6 @@ _default_sequences = {
 }
 
 from .encoder import Encoder
-from .predictor import Predictor
+from .predictor import PredictorFunction, PredictorModel
 from .encoder_trainer import EncoderTrainer
 from .simulator import Simulator

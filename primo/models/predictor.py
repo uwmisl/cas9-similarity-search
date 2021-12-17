@@ -4,7 +4,7 @@ from tensorflow.keras import layers
 import numpy as np
 import pandas as pd
 
-from .cas9 import crispr_specificity
+from .cas9_keras import log10_crispr_spec
 from ..tools import sequences as seqtools
 
 DNA_FEATURE_LENGTH = 20
@@ -31,44 +31,16 @@ def local_interactions_layer(window_size, **lambda_args):
 
     return layers.Lambda(local_interactions, **lambda_args)
 
-
-def predict_function(X):
-    """Take a one-hot encoded sequence pair, and apply prediction model to it
+class PredictorModel:
+    """Represents a model trained to approximate crispr_specificity function
     """
-    seqs = seqtools.onehots_to_seqs(X)
-    return crispr_specificity(seqs[0], seqs[1])
-
-class Predictor:
-    """
-
-    Predicts thermodynamic yield for a hybridization reaction between two DNA sequences
-    where the second sequence will be reverse-complemented.
-
-    Note that this Predictor is designed to be differentialable (unlike Nupack), which means it
-    can be used in a neural network.
-
-    """
-
-    """
-    1 3 2 4 5
-
-    kernel_size = 3
-    avg_pool
-
-    avg(1, 3, 2) = 2
-    avg(3, 2, 4) = 3
-    avg(2, 4, 5) = 11/3
-
-    sigmod(x) = 1 / (1 + exp(-x))
-    """
-
     def __init__(self, model_path = None, **kwargs):
-
         for arg, val in list(kwargs.items()):
             setattr(self, arg, val)
 
         if model_path is None:
             self.model = tf.keras.Sequential([
+                layers.Permute((3,2,1), input_shape=(2, DNA_FEATURE_LENGTH, 4)),
                 local_interactions_layer(window_size=1, input_shape=[4,DNA_FEATURE_LENGTH,2]),
                 layers.AveragePooling1D(3),
                 layers.Conv1D(36, 3, activation='tanh'),
@@ -78,25 +50,6 @@ class Predictor:
             ])
         else:
             self.model = tf.keras.models.load_model(model_path)
-
-    def __call__(self, X):
-        return self.model(X)
-
-    # def trainable(self, flag):
-    #     for layer in self.model.layers:
-    #         layer.trainable = flag
-
-    def seq_pairs_to_onehots(self, seq_pairs):
-        # transform sequences into their one-hot representation
-        onehot_pairs = np.stack([
-            seqtools.seqs_to_onehots(seq_pairs.target_features.values),
-            seqtools.seqs_to_onehots(seq_pairs.query_features.values)
-        ], axis = 1)
-
-        # transpose onehot pairs from (batch, pair, len, base) -> (batch, base, len, pair)
-        onehot_pairs_T = onehot_pairs.transpose(0, 3, 2, 1)
-
-        return onehot_pairs_T
 
     def train(self, sequences, yields, learning_rate=1e-3, **fit_kwargs):
         self.model.compile(tf.keras.optimizers.RMSprop(learning_rate), tf.keras.losses.binary_crossentropy)
@@ -109,3 +62,37 @@ class Predictor:
 
     def save(self, model_path):
       self.model.save(model_path)
+
+
+class PredictorFunction:
+    """ Wraps the log10_crispr_spec tensor function in a model to be used as
+    a predictor for training encoder.
+    """
+    def __init__(self, model_path = None, **kwargs):
+
+        for arg, val in list(kwargs.items()):
+            setattr(self, arg, val)
+
+        self.model = tf.keras.Sequential([
+            layers.Lambda(log10_crispr_spec)
+        ])
+
+    def __call__(self, X):
+        return self.model(X)
+
+    # def trainable(self, flag):
+    #     for layer in self.model.layers:
+    #         layer.trainable = flag
+
+    # def seq_pairs_to_onehots(self, seq_pairs):
+    #     # transform sequences into their one-hot representation
+    #     onehot_pairs = np.stack([
+    #         seqtools.seqs_to_onehots(seq_pairs.target_features.values),
+    #         seqtools.seqs_to_onehots(seq_pairs.query_features.values)
+    #     ], axis = 1)
+
+    #     # transpose onehot pairs from (batch, pair, len, base) -> (batch, base, len, pair)
+    #     onehot_pairs_T = onehot_pairs.transpose(0, 3, 2, 1)
+
+    #     return onehot_pairs_T
+

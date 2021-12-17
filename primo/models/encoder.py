@@ -61,7 +61,7 @@ class Encoder:
 
         # The feature region of our engineered DNA sequence is 80 nucleotides long.
         # If you use a shorter or longer DNA sequence for your data, you'll want to change this as well.
-        "output_len": 80,
+        "output_len": 20,
 
         # Regularization penalty post softmax and helps prevent overfitting.
         # This value, 1e-2, was experimentally determined.

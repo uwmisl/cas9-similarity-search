@@ -2,11 +2,7 @@ from os import read
 import numpy as np
 import pandas as pd
 
-# import cupyck
-# from cupyck.session.session import Session
-
 from .cas9 import crispr_specificity
-
 
 from ..tools import sequences as seqtools
 
@@ -51,8 +47,8 @@ class Simulator:
 
     def simulate(self, feature_seq_pairs):
         """
-        Takes a batch of pairs of feature sequences as a pandas dataframe,
-        simulates the thermodynamic yield from their potential hybridization.
+        Takes a batch of pairs of feature sequences as a pandas dataframe, and
+        estimates the CAS9 specificity for each
 
         """
         return np.array(
