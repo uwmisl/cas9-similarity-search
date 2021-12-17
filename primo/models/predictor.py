@@ -4,7 +4,10 @@ from tensorflow.keras import layers
 import numpy as np
 import pandas as pd
 
+from .cas9 import crispr_specificity
 from ..tools import sequences as seqtools
+
+DNA_FEATURE_LENGTH = 20
 
 def local_interactions_layer(window_size, **lambda_args):
 
@@ -27,6 +30,13 @@ def local_interactions_layer(window_size, **lambda_args):
         return by_position
 
     return layers.Lambda(local_interactions, **lambda_args)
+
+
+def predict_function(X):
+    """Take a one-hot encoded sequence pair, and apply prediction model to it
+    """
+    seqs = seqtools.onehots_to_seqs(X)
+    return crispr_specificity(seqs[0], seqs[1])
 
 class Predictor:
     """
@@ -59,23 +69,22 @@ class Predictor:
 
         if model_path is None:
             self.model = tf.keras.Sequential([
-                local_interactions_layer(window_size=1, input_shape=[4,80,2]),
+                local_interactions_layer(window_size=1, input_shape=[4,DNA_FEATURE_LENGTH,2]),
                 layers.AveragePooling1D(3),
                 layers.Conv1D(36, 3, activation='tanh'),
                 layers.GlobalAveragePooling1D(),
                 layers.Dense(1, name='logit'),
                 layers.Activation('sigmoid')
             ])
-
         else:
             self.model = tf.keras.models.load_model(model_path)
 
     def __call__(self, X):
         return self.model(X)
 
-    def trainable(self, flag):
-        for layer in self.model.layers:
-            layer.trainable = flag
+    # def trainable(self, flag):
+    #     for layer in self.model.layers:
+    #         layer.trainable = flag
 
     def seq_pairs_to_onehots(self, seq_pairs):
         # transform sequences into their one-hot representation
@@ -99,4 +108,4 @@ class Predictor:
         return history
 
     def save(self, model_path):
-        self.model.save(model_path)
+      self.model.save(model_path)

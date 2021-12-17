@@ -23,7 +23,7 @@ def entropy_regularizer(strength):
 
         # Adding a little epsilon (1e-10) so we never take the log of zero (good catch, callie!)
         ent_by_position = -tf.reduce_sum(
-            seq_probs * tf.log(seq_probs + 1e-10),
+            seq_probs * tf.math.log(seq_probs + 1e-10),
             axis = 2
         )
         mean_ent_by_sequence = tf.reduce_mean(

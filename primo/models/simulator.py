@@ -5,7 +5,8 @@ import pandas as pd
 # import cupyck
 # from cupyck.session.session import Session
 
-import primo.models.cas9 as cas9
+from .cas9 import crispr_specificity
+
 
 from ..tools import sequences as seqtools
 
@@ -14,38 +15,38 @@ class Simulator:
     Wrapper for running context (e.g. GPU, remote-execution).
     """
 
-    defaults = {
-        # Reverse Primer.
-        "RP": "GTCCTCAACAACCTCCTG",
-        # First 6 nucleotides of the reverse primer.
-        "toehold": "GTCCTC",
+    # defaults = {
+    #     # Reverse Primer.
+    #     "RP": "GTCCTCAACAACCTCCTG",
+    #     # First 6 nucleotides of the reverse primer.
+    #     "toehold": "GTCCTC",
 
-        # Target molar concentration.
-        "t_conc": 1e-9,
-        # Query molar concentration.
-        "q_conc": 1e-9,
-        # Final temperature of the annealing process.
-        "temp": 21
-    }
+    #     # Target molar concentration.
+    #     "t_conc": 1e-9,
+    #     # Query molar concentration.
+    #     "q_conc": 1e-9,
+    #     # Final temperature of the annealing process.
+    #     "temp": 21
+    # }
 
-    def __init__(self, sess_or_client, **kwargs):
+    def __init__(self, **kwargs):
 
-        for arg, val in list(self.defaults.items()):
-            setattr(self, arg, val)
+        # for arg, val in list(self.defaults.items()):
+        #     setattr(self, arg, val)
 
         for arg, val in list(kwargs.items()):
             setattr(self, arg, val)
 
-        if isinstance(sess_or_client, cupyck.Client):
-            self.client = sess_or_client
-            self.session = None
+        # if isinstance(sess_or_client, cupyck.Client):
+        #     self.client = sess_or_client
+        #     self.session = None
 
-        elif isinstance(sess_or_client, Session):
-            self.client = None
-            self.session = sess_or_client
+        # elif isinstance(sess_or_client, Session):
+        #     self.client = None
+        #     self.session = sess_or_client
 
-        else:
-            raise ValueError("must provide valid session or client")
+        # else:
+        #     raise ValueError("must provide valid session or client")
 
 
     def simulate(self, feature_seq_pairs):
@@ -54,39 +55,42 @@ class Simulator:
         simulates the thermodynamic yield from their potential hybridization.
 
         """
-
-        if self.client is not None:
-            return self.client(feature_seq_pairs)
-
-        # These are all simulation parameters that will be passed to the concentration session.
-        conc_jobs = feature_seq_pairs.apply(
-            lambda pair:
-                { "sequences": [
-                      pair.target_features + self.RP,
-                      seqtools.revcomp(pair.query_features + self.toehold)
-                  ],
-                  "x0": np.array([self.t_conc, self.q_conc]),
-                  "temperature": self.temp,
-                  # Each strand can hybridize with a maximum of one other strand.
-                  "max_complex_size": 2
-                },
-            axis = 1,
-            result_type = 'expand'
+        return np.array(
+            [crispr_specificity(p.target_features, p.query_features) for _, p in feature_seq_pairs.iterrows()]
         )
 
-        conc_results = self.session.concentrations(conc_jobs)
+        # if self.client is not None:
+        #     return self.client(feature_seq_pairs)
+
+        # # These are all simulation parameters that will be passed to the concentration session.
+        # conc_jobs = feature_seq_pairs.apply(
+        #     lambda pair:
+        #         { "sequences": [
+        #               pair.target_features + self.RP,
+        #               seqtools.revcomp(pair.query_features + self.toehold)
+        #           ],
+        #           "x0": np.array([self.t_conc, self.q_conc]),
+        #           "temperature": self.temp,
+        #           # Each strand can hybridize with a maximum of one other strand.
+        #           "max_complex_size": 2
+        #         },
+        #     axis = 1,
+        #     result_type = 'expand'
+        # )
+
+        # conc_results = self.session.concentrations(conc_jobs)
 
 
-        # Calculates the yield (ratio of final concentration of the duplex to the initial concentration of the limiting reagent).
-        # Duplex here refers to the hybridized target and query.
-        duplex_yields = conc_results.apply(
-            lambda result:
-                result.concentrations[(1,2)] / result.x0.min(),
-            axis = 1
-        )
-        duplex_yields.name = "duplex_yield"
+        # # Calculates the yield (ratio of final concentration of the duplex to the initial concentration of the limiting reagent).
+        # # Duplex here refers to the hybridized target and query.
+        # duplex_yields = conc_results.apply(
+        #     lambda result:
+        #         result.concentrations[(1,2)] / result.x0.min(),
+        #     axis = 1
+        # )
+        # duplex_yields.name = "duplex_yield"
 
-        return conc_jobs.join(duplex_yields)
+        # return conc_jobs.join(duplex_yields)
 
 # if __name__ == "__main__":
 #     # This allows you to use this simulator as either a client or a server.
