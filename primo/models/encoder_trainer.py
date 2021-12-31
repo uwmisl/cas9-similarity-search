@@ -4,6 +4,13 @@ from tensorflow.keras import layers
 import numpy as np
 import pandas as pd
 
+from .cas9_keras import crispr_spec_for_loss
+
+def cas9_loss(y_true, y_pred):
+    scores = crispr_spec_for_loss(y_pred)
+    flip = tf.where(y_true == 0, tf.ones_like(y_true, dtype=tf.float32), -1.0 * tf.ones_like(y_true, dtype=tf.float32))
+    return scores * flip
+
 class EncoderTrainer:
     """
     Glues together the models to ensure that similar images yield DNA sequences more likely to hybridize.
@@ -47,15 +54,15 @@ class EncoderTrainer:
 
         # y_h: Estimated output
         y_h = predictor(S_pairs_T)
-        y_h_T = layers.Reshape([1])(y_h)
+        #y_h_T = layers.Reshape([1])(y_h)
 
         # Convenience model for internal inspection
         self.calcseq = tf.keras.Model(inputs=X_pairs, outputs=S_pairs_T)
         # Calcdists exists as a convenience property, if one needs to perform a distance calculation on the GPU at the same time (no training happening).
         self.calcdists = tf.keras.Model(inputs=X_pairs, outputs=distances)
         # The actual trainable model.
-        self.model = tf.keras.Model(inputs=X_pairs, outputs=y_h_T)
-        #self.predictor.trainable(False)
+        self.model = tf.keras.Model(inputs=X_pairs, outputs=y_h)
+        self.predictor.trainable(False)
 
 
     # def refit_predictor(self, predictor_batch_generator, simulator, refit_every = 1, refit_epochs = 10):

@@ -66,7 +66,7 @@ class Encoder:
         # Regularization penalty post softmax and helps prevent overfitting.
         # This value, 1e-2, was experimentally determined.
         # Since this encoder's output is a softmax, a valid range of regularization strength is between 0 and 1.
-        "entropy_reg_strength": 1e-2
+        "entropy_reg_strength": 0 #1e-2
     }
 
     def __init__(self, model_path = None, **kwargs):
@@ -96,21 +96,22 @@ class Encoder:
         if model_path is None:
             self.model = tf.keras.Sequential([
                 layers.Dense(self.input_dim/2, activation = 'relu', input_shape=[self.input_dim]),
+                layers.Dense(self.input_dim/2, activation = 'relu'),
                 layers.Dense(self.output_len * number_of_bases, activation='relu'),
                 layers.Reshape([self.output_len, number_of_bases]),
                 layers.Activation('softmax'),
-                layers.Lambda(
-                    # Just using the identity because we don't want to transform the softmaxxed output,
-                    # we just want to make sure we learn an output encoding that's regularized (i.e. not crazy complex/over-fitting)
-                    lambda x: x,
+                # layers.Lambda(
+                #     # Just using the identity because we don't want to transform the softmaxxed output,
+                #     # we just want to make sure we learn an output encoding that's regularized (i.e. not crazy complex/over-fitting)
+                #     lambda x: x,
 
-                    # In inference mode, this does nothing (just passes identity), but when training, this regularizes
-                    # the activations.
-                    # Using an "entropy" regulator because we passed the output through a softmax.
-                    activity_regularizer=entropy_regularizer(
-                        self.entropy_reg_strength
-                    )
-                )
+                #     # In inference mode, this does nothing (just passes identity), but when training, this regularizes
+                #     # the activations.
+                #     # Using an "entropy" regulator because we passed the output through a softmax.
+                #     activity_regularizer=entropy_regularizer(
+                #         self.entropy_reg_strength
+                #     )
+                # )
             ], name='encoder')
 
         else:

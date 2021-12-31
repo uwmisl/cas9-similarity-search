@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_probability as tfp
 import numpy as np
 import primo.tools.sequences as seqtools
 
@@ -37,12 +38,45 @@ def log10_crispr_spec(seq_pairs):
     # turn 4x4 match matrix into 1x16 vector
     subst_ids_flat = tf.reshape(subst_ids, [-1, seq_len, 16])
 
-    # multiply by scores and take highest value
-    subst_scores = tf.reduce_sum(subst_ids_flat * subtrans.flatten(), -1)
+    # multiply by scores and sum
+    #subst_scores = tf.reduce_max(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
+    subst_scores = tf.reduce_sum(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
 
     # compute dot product of position penalty and substitution type
-    scores = tf.reduce_sum(subst_scores * subpen.flatten(), -1)
+    scores = tf.reduce_sum(subst_scores * tf.constant(subpen.flatten()), -1)
 
-    # threshold final result
+    # adjust to range 0 to 1
+
+    # scores = 1 + (scores - log10_ub) / (log10_ub - log10_lb)
+    # return tfp.math.clip_by_value_preserve_gradient(scores, 0.0, 1.0)
+
+    scores = tfp.math.clip_by_value_preserve_gradient(scores, log10_lb, log10_ub)
+    return 10 ** (scores - log10_ub)
     #return 10 ** (bandpass_hinge(scores + log10_ub) - log10_ub)
-    return 10 ** (tf.minimum(scores, log10_lb) - log10_ub)
+    #return 10 ** (tf.minimum(scores, 0) - log10_ub)
+    #return 10 ** scores
+
+def crispr_spec_for_loss(seq_pairs):
+
+    # ensure that sequence pairs have dimension: (batch, 2 sequences, 20 nt, 4 channels)
+    seq_pairs.shape.assert_is_compatible_with([None, 2, 20, 4])
+    seq_len = seq_pairs.shape[2]
+
+    # separate first and sequences from each pair
+    ref = seq_pairs[:, 0, :, :]
+    obs = seq_pairs[:, 1, :, :]
+
+    # computes the outer product of one-hot vectors at each position for each pair
+    # for syntax see https://numpy.org/doc/stable/reference/generated/numpy.einsum.html
+    subst_ids = tf.einsum('...i,...j->...ij', ref, obs)
+
+    # turn 4x4 match matrix into 1x16 vector
+    subst_ids_flat = tf.reshape(subst_ids, [-1, seq_len, 16])
+
+    # multiply by scores and sum
+    subst_scores = tf.reduce_sum(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
+
+    # compute dot product of position penalty and substitution type
+    scores = tf.reduce_sum(subst_scores * tf.constant(subpen.flatten()), -1)
+
+    return scores - log10_ub

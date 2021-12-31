@@ -51,6 +51,21 @@ class PredictorModel:
         else:
             self.model = tf.keras.models.load_model(model_path)
 
+    def __call__(self, X):
+        return self.model(X)
+
+    def seq_pairs_to_onehots(self, seq_pairs):
+        # transform sequences into their one-hot representation
+        onehot_pairs = np.stack([
+            seqtools.seqs_to_onehots(seq_pairs.target_features.values),
+            seqtools.seqs_to_onehots(seq_pairs.query_features.values)
+        ], axis = 1)
+
+        # transpose onehot pairs from (batch, pair, len, base) -> (batch, base, len, pair)
+        #onehot_pairs_T = onehot_pairs.transpose(0, 3, 2, 1)
+
+        return onehot_pairs
+
     def train(self, sequences, yields, learning_rate=1e-3, **fit_kwargs):
         self.model.compile(tf.keras.optimizers.RMSprop(learning_rate), tf.keras.losses.binary_crossentropy)
         history = self.model.fit(
@@ -59,6 +74,10 @@ class PredictorModel:
             **fit_kwargs
         )
         return history
+
+    def trainable(self, flag):
+        for layer in self.model.layers:
+            layer.trainable = flag
 
     def save(self, model_path):
       self.model.save(model_path)
@@ -74,25 +93,14 @@ class PredictorFunction:
             setattr(self, arg, val)
 
         self.model = tf.keras.Sequential([
-            layers.Lambda(log10_crispr_spec)
+            layers.Lambda(tf.function(log10_crispr_spec))
         ])
 
     def __call__(self, X):
         return self.model(X)
 
-    # def trainable(self, flag):
-    #     for layer in self.model.layers:
-    #         layer.trainable = flag
+    def trainable(self, flag):
+        pass
 
-    # def seq_pairs_to_onehots(self, seq_pairs):
-    #     # transform sequences into their one-hot representation
-    #     onehot_pairs = np.stack([
-    #         seqtools.seqs_to_onehots(seq_pairs.target_features.values),
-    #         seqtools.seqs_to_onehots(seq_pairs.query_features.values)
-    #     ], axis = 1)
 
-    #     # transpose onehot pairs from (batch, pair, len, base) -> (batch, base, len, pair)
-    #     onehot_pairs_T = onehot_pairs.transpose(0, 3, 2, 1)
-
-    #     return onehot_pairs_T
 

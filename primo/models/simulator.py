@@ -1,10 +1,14 @@
 from os import read
+import multiprocessing
 import numpy as np
 import pandas as pd
 
 from .cas9 import crispr_specificity
 
 from ..tools import sequences as seqtools
+
+def f(row):
+    return crispr_specificity(row[1].target_features, row[1].query_features)
 
 class Simulator:
     """
@@ -51,9 +55,14 @@ class Simulator:
         estimates the CAS9 specificity for each
 
         """
-        return np.array(
-            [crispr_specificity(p.target_features, p.query_features) for _, p in feature_seq_pairs.iterrows()]
-        )
+
+        with multiprocessing.Pool(8) as pool:
+            results = pool.map(f, feature_seq_pairs.iterrows())
+
+        return np.array(results)
+        # return np.array(
+        #     [crispr_specificity(p.target_features, p.query_features) for _, p in feature_seq_pairs.iterrows()]
+        # )
 
         # if self.client is not None:
         #     return self.client(feature_seq_pairs)
