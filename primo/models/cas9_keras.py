@@ -51,10 +51,16 @@ def log10_crispr_spec(seq_pairs):
     # return tfp.math.clip_by_value_preserve_gradient(scores, 0.0, 1.0)
 
     scores = tfp.math.clip_by_value_preserve_gradient(scores, log10_lb, log10_ub)
-    return 10 ** (scores - log10_ub)
+    return scores - log10_ub
     #return 10 ** (bandpass_hinge(scores + log10_ub) - log10_ub)
     #return 10 ** (tf.minimum(scores, 0) - log10_ub)
     #return 10 ** scores
+
+def linear_crispr_spec(seq_pairs):
+    return 10 ** log10_crispr_spec(seq_pairs)
+
+def log10_norm_crispr_spec(seq_pairs):
+    return 1.0 + log10_crispr_spec(seq_pairs) / (log10_ub - log10_lb)
 
 def crispr_spec_for_loss(seq_pairs):
 
