@@ -50,17 +50,37 @@ def log10_crispr_spec(seq_pairs):
     # scores = 1 + (scores - log10_ub) / (log10_ub - log10_lb)
     # return tfp.math.clip_by_value_preserve_gradient(scores, 0.0, 1.0)
 
-    scores = tfp.math.clip_by_value_preserve_gradient(scores, log10_lb, log10_ub)
+    scores = tfp.math.clip_by_value_preserve_gradient(scores, -1e9, log10_ub)
     return scores - log10_ub
     #return 10 ** (bandpass_hinge(scores + log10_ub) - log10_ub)
     #return 10 ** (tf.minimum(scores, 0) - log10_ub)
     #return 10 ** scores
 
-def linear_crispr_spec(seq_pairs):
-    return 10 ** log10_crispr_spec(seq_pairs)
+    
+def linear_crispr_spec(mid_point=None):
+    """Returns a predictor function which will scale the log10 scores such that the
+    given `mid_point` value is 0.5.
+    
+    mid_point is the output of log10_crispr_spec, and shoudl be on range [log10_lb, log10_ub]
+    
+    If mid_point is none, cleave rate is linearized; i.e. return 10**log_10_crispr_spec(x)
+    """
+    if mid_point is None:
+        power = 10
+    else:
+        power = 0.5 ** (1 / mid_point)
+
+    def f(seq_pairs):
+        return power ** log10_crispr_spec(seq_pairs)
+   
+    return f
+
+# def linear_crispr_spec(seq_pairs):
+#     return 10 ** log10_crispr_spec(seq_pairs)
 
 def log10_norm_crispr_spec(seq_pairs):
-    return 1.0 + log10_crispr_spec(seq_pairs) / (log10_ub - log10_lb)
+    logscores = tfp.math.clip_by_value_preserve_gradient(log10_crispr_spec(seq_pairs), log10_lb - log10_ub, 0)
+    return 1.0 + logscores / (log10_ub - log10_lb)
 
 def crispr_spec_for_loss(seq_pairs):
 
