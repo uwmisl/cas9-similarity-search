@@ -39,8 +39,8 @@ def log10_crispr_spec(seq_pairs):
     subst_ids_flat = tf.reshape(subst_ids, [-1, seq_len, 16])
 
     # multiply by scores and sum
-    #subst_scores = tf.reduce_max(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
-    subst_scores = tf.reduce_sum(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
+    subst_scores = tf.reduce_max(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
+    # subst_scores = tf.reduce_sum(subst_ids_flat * tf.constant(subtrans.flatten()), -1)
 
     # compute dot product of position penalty and substitution type
     scores = tf.reduce_sum(subst_scores * tf.constant(subpen.flatten()), -1)
