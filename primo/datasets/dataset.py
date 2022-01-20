@@ -1,4 +1,5 @@
 import abc
+import sklearn.metrics
 import numpy as np
 
 class Dataset(object, metaclass=abc.ABCMeta):
@@ -59,6 +60,65 @@ class Static(Dataset):
             yield pairs, self.X[pairs]
 
 
+def triplet_batch_generator(dataset_batch_generator, similarity_threshold):
+    while True:
+        n_batch = 0
+
+        # Get a batch worth of anchors
+        anchor_ids, anchor_vals = next(dataset_batch_generator)
+
+
+        pos_filled = np.zeros_like(anchor_ids, dtype=bool)
+        pos_ids = np.zeros_like(anchor_ids)
+        pos_vals = np.zeros_like(anchor_vals)
+        neg_filled = np.zeros_like(anchor_ids, dtype=bool)
+        neg_ids = np.zeros_like(anchor_ids)
+        neg_vals = np.zeros_like(anchor_vals)
+
+        batches_searched = 0
+        # Keep pulling batches and taking random positive and negative samples until all anchors both
+        while (not np.all(pos_filled) or not np.all(neg_filled)) and batches_searched < 100:
+            chunk_ids, chunk_vals = next(dataset_batch_generator)
+            batches_searched += 1
+
+            # Get index of samples which do not yet have a pos and negative pairing
+            search_rows = np.invert(pos_filled) | np.invert(neg_filled)
+
+            # Compute distance for those rows
+            distance_matrix = sklearn.metrics.pairwise_distances(anchor_vals[search_rows], chunk_vals)
+            similar_matrix = distance_matrix <= similarity_threshold
+
+            # Create a matrix of random numbers, used to randomly select among multiple matches for each anchor
+            random_matrix = np.random.randint(1, similar_matrix.shape[1], size=similar_matrix.shape)
+
+            # Select positive samples
+            maxidx = np.argmax(similar_matrix * random_matrix, axis=1)
+            maxval = np.max(similar_matrix * random_matrix, axis=1)
+            update_idx = (maxval > 0)
+            pos_filled[np.flatnonzero(search_rows)[update_idx]] = True
+            pos_ids[np.flatnonzero(search_rows)[update_idx]] = chunk_ids[maxidx[update_idx]]
+            pos_vals[np.flatnonzero(search_rows)[update_idx]] = chunk_vals[maxidx[update_idx]]
+
+            # Select negative samples
+            disimilar_matrix = ~similar_matrix
+            maxidx = np.argmax(disimilar_matrix * random_matrix, axis=1)
+            maxval = np.max(disimilar_matrix * random_matrix, axis=1)
+            update_idx = (maxval > 0)
+            neg_filled[np.flatnonzero(search_rows)[update_idx]] = True
+            neg_ids[np.flatnonzero(search_rows)[update_idx]] = chunk_ids[maxidx[update_idx]]
+            neg_vals[np.flatnonzero(search_rows)[update_idx]] = chunk_vals[maxidx[update_idx]]
+
+
+        # It's not usually possible to find positive pairings for all anchors.
+        # In this cases, use the anchor as its own positive pair
+        pos_empty = np.invert(pos_filled)
+        pos_vals[pos_empty] = anchor_vals[pos_empty]
+        pos_ids[pos_empty] = anchor_ids[pos_empty]
+
+        ids = np.stack([anchor_ids, pos_ids, neg_ids], axis=1)
+        triplets = np.stack([anchor_vals, pos_vals, neg_vals], axis=1)
+
+        yield ids, triplets
 
 def keras_batch_generator(dataset_batch_generator, similarity_threshold):
     # Yield datasets

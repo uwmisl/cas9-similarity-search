@@ -23,6 +23,26 @@ class OpenImagesTrain(Dataset):
             image.load()
             yield image
 
+
+    def random_features(self, batch_size):
+        feature_dir = os.path.join(self.path, 'features')
+        files = os.listdir(feature_dir)
+
+        while True:
+
+            f_a, f_b = np.random.choice(files, 2, replace=False)
+            sys.stdout.write("switching to %s and %s\n" % (f_a, f_b))
+
+            df1 = pd.read_hdf(os.path.join(feature_dir, f_a))
+            df2 = pd.read_hdf(os.path.join(feature_dir, f_b))
+
+            df = pd.concat([df1, df2])
+            n = len(df)
+
+            for _ in range(self.switch_every):
+                pairs = np.random.permutation(n)[:batch_size]
+                yield df.index.values[pairs], df.values[pairs]
+
     def random_pairs(self, batch_size):
 
         feature_dir = os.path.join(self.path, 'features')
@@ -46,11 +66,11 @@ class OpenImagesTrain(Dataset):
                 yield df.index.values[pairs], df.values[pairs]
 
 class OpenImagesVal(Dataset):
-    
+
     def __init__(self, val_path):
         feature_path = os.path.join(val_path, 'features/validation.h5')
         self.df = pd.read_hdf(feature_path)
-        
+
     def random_pairs(self, batch_size):
         n = len(self.df)
         while True:
