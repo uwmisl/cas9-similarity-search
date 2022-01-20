@@ -65,12 +65,14 @@ def linear_crispr_spec(mid_point=None):
     
     If mid_point is none, cleave rate is linearized; i.e. return 10**log_10_crispr_spec(x)
     """
-    if mid_point is None:
-        power = 10
-    else:
+    power = 10
+    if mid_point is not None:
         power = 0.5 ** (1 / mid_point)
 
     def f(seq_pairs):
+        """
+        seq_pairs batch_size x 2 x SEQLEN x 4
+        """
         return power ** log10_crispr_spec(seq_pairs)
    
     return f
