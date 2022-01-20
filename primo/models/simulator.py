@@ -56,13 +56,28 @@ class Simulator:
 
         """
 
-        with multiprocessing.Pool(8) as pool:
-            results = pool.map(f, feature_seq_pairs.iterrows())
+#         with multiprocessing.Pool(8) as pool:
+#             results = pool.map(f, feature_seq_pairs.iterrows())
 
-        return np.array(results)
-        # return np.array(
-        #     [crispr_specificity(p.target_features, p.query_features) for _, p in feature_seq_pairs.iterrows()]
-        # )
+#         return np.array(results)
+        seqlen = len(feature_seq_pairs.target_features.iloc[0])
+        if seqlen > 20:
+            sites = int(seqlen / 20)
+            # Handle multi-site sequences
+            site_scores = np.array([
+                [
+                    crispr_specificity(
+                        p.target_features[i*20:(i+1)*20],
+                        p.query_features[i*20:(i+1)*20]
+                    )
+                    for i in range(sites)
+                ] for _, p in feature_seq_pairs.iterrows()
+            ])
+            return np.max(site_scores, axis=1)
+        else:
+            return np.array(
+                [crispr_specificity(p.target_features, p.query_features) for _, p in feature_seq_pairs.iterrows()]
+            )
 
         # if self.client is not None:
         #     return self.client(feature_seq_pairs)
