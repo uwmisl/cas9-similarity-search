@@ -1,12 +1,54 @@
 import abc
 import sklearn.metrics
 import numpy as np
+import tensorflow as tf
+
+def pairwise_dist (A, B):
+  """
+  Computes pairwise distances between each elements of A and each elements of B.
+  Args:
+    A,    [m,d] matrix
+    B,    [n,d] matrix
+  Returns:
+    D,    [m,n] matrix of pairwise distances
+  """
+  with tf.compat.v1.variable_scope('pairwise_dist'):
+    # squared norms of each row in A and B
+    na = tf.reduce_sum(tf.square(A), 1)
+    nb = tf.reduce_sum(tf.square(B), 1)
+
+    # na as a row and nb as a co"lumn vectors
+    na = tf.reshape(na, [-1, 1])
+    nb = tf.reshape(nb, [1, -1])
+
+    # return pairwise euclidead difference matrix
+    D = tf.sqrt(tf.maximum(na - 2*tf.matmul(A, B, False, True) + nb, 0.0))
+  return D
 
 class Dataset(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def random_pairs(self, batch_size):
         pass
+
+    def random_features(self, batch_size):
+        feature_dir = os.path.join(self.path, 'features')
+        files = os.listdir(feature_dir)
+
+        while True:
+
+            f_a, f_b = np.random.choice(files, 2, replace=False)
+            sys.stdout.write("switching to %s and %s\n" % (f_a, f_b))
+
+            df1 = pd.read_hdf(os.path.join(feature_dir, f_a))
+            df2 = pd.read_hdf(os.path.join(feature_dir, f_b))
+
+            df = pd.concat([df1, df2])
+            n = len(df)
+
+            for _ in range(self.switch_every):
+                pairs = np.random.permutation(n)[:batch_size]
+                yield df.index.values[pairs], df.values[pairs]
 
     def balanced_pairs(self, batch_size, sim_thresh):
 
@@ -79,13 +121,18 @@ def triplet_batch_generator(dataset_batch_generator, similarity_threshold):
         # Keep pulling batches and taking random positive and negative samples until all anchors both
         while (not np.all(pos_filled) or not np.all(neg_filled)) and batches_searched < 100:
             chunk_ids, chunk_vals = next(dataset_batch_generator)
+
             batches_searched += 1
 
             # Get index of samples which do not yet have a pos and negative pairing
             search_rows = np.invert(pos_filled) | np.invert(neg_filled)
 
             # Compute distance for those rows
-            distance_matrix = sklearn.metrics.pairwise_distances(anchor_vals[search_rows], chunk_vals)
+            #distance_matrix = sklearn.metrics.pairwise_distances(anchor_vals[search_rows], chunk_vals)
+            distance_matrix = pairwise_dist(
+                tf.convert_to_tensor(anchor_vals[search_rows], dtype=np.float32),
+                tf.convert_to_tensor(chunk_vals, dtype=np.float32),
+            ).numpy()
             similar_matrix = distance_matrix <= similarity_threshold
 
             # Create a matrix of random numbers, used to randomly select among multiple matches for each anchor
