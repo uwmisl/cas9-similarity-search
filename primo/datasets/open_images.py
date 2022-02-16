@@ -23,7 +23,6 @@ class OpenImagesTrain(Dataset):
             image.load()
             yield image
 
-
     def random_features(self, batch_size):
         feature_dir = os.path.join(self.path, 'features')
         files = os.listdir(feature_dir)
@@ -76,3 +75,9 @@ class OpenImagesVal(Dataset):
         while True:
             pairs = np.random.permutation(n)[:batch_size*2].reshape(-1,2)
             yield self.df.index.values[pairs], self.df.values[pairs]
+
+    def random_features(self, batch_size):
+        n = len(self.df)
+        while True:
+            features = np.random.permutation(n)[:batch_size]
+            yield self.df.index.values[features], self.df.values[features]
