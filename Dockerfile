@@ -19,4 +19,5 @@ RUN pip install \
     h5py \
     tables \
     unireedsolomon \
-    seaborn
+    seaborn \
+    tensorflow-probability==0.13.0
