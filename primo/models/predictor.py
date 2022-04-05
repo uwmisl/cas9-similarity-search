@@ -34,7 +34,7 @@ def local_interactions_layer(window_size, **lambda_args):
 class PredictorModel:
     """Represents a model trained to approximate crispr_specificity function
     """
-def __init__(self, model_path = None, **kwargs):
+    def __init__(self, model_path = None, **kwargs):
         for arg, val in list(kwargs.items()):
             setattr(self, arg, val)
 

@@ -8,7 +8,7 @@ from PIL import Image
 from .dataset import Dataset
 
 class OpenImagesTrain(Dataset):
-    def __init__(self, path, switch_every = 1000):
+    def __init__(self, path, switch_every = 10**5):
         self.path = path
         self.switch_every = switch_every
 
