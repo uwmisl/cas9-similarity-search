@@ -48,7 +48,6 @@ def log10_crispr_spec(seq_pairs, subpen, subtrans):
     # threshold final result
     return bandpass_hinge(scores + log10_ub) - log10_ub
 
-
 def linear_crispr_spec(mid_point=None):
     """Returns a predictor function which will scale the log10 scores such that the
     given `mid_point` value is 0.5.
@@ -126,3 +125,31 @@ def dotproduct_linearized(mid_point=None):
         return 0.5 + (scores - 0.5) * confidence
 
     return f
+
+def make_multisite_predictor(predictor):
+    """Return a function that will predict multiple sites using the predictor
+    function provided to score each
+
+    Combined probability is 1 - (1 - P(site1)) * (1 - P(site2)) ... * (1 - P(siteN))
+    """
+    def multisite_predict(seq_pairs):
+        n_sites = int(seq_pairs.shape[2] / 20)
+        # Split into separate sites
+        sites = tf.stack(tf.split(seq_pairs, n_sites, axis=2))
+        # Apply predictor to sites independently
+        scores = tf.map_fn(tf.function(predictor), sites)
+        # Compute combined probability
+        return 1 - tf.reduce_prod(1 - scores, axis=0)
+
+    return multisite_predict
+
+def log_multisite_predictor(seq_pairs):
+    n_sites = int(seq_pairs.shape[2] / 20)
+    # Split into separate sites
+    sites = tf.stack(tf.split(seq_pairs, n_sites, axis=2))
+    # Apply predictor to sites independently
+    # TODO: Try using log10_crispr_spec instead of dotproduct_crispr_spec. It
+    # should be the same with hardmax inputs
+    scores = tf.map_fn(tf.function(dotproduct_crispr_spec), sites)
+    linear_scores = 10**scores
+    return tf.experimental.numpy.log10(tf.reduce_sum(linear_scores, axis=0))

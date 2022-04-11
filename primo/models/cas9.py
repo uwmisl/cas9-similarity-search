@@ -2,7 +2,6 @@ import pickle
 import numpy as np
 from pathlib import Path
 
-
 def model_values_path():
     """Returns the location of the cas9 cleavage model values.
 
