@@ -31,7 +31,7 @@ class Simulator:
                 ] for _, p in feature_seq_pairs.iterrows()
             ])
             # Compute combined probability
-            return 1 - np.prod(1 - scores, axis=0)
+            return 1 - np.prod(1 - site_scores, axis=1)
         else:
             return np.array(
                 [crispr_specificity(p.target_features, p.query_features) for _, p in feature_seq_pairs.iterrows()]
