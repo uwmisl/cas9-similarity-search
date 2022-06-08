@@ -46,13 +46,19 @@ class OpenImagesTrain(Dataset):
                 yield df.index.values[pairs], df.values[pairs]
 
 class OpenImagesVal(Dataset):
-    
+
     def __init__(self, val_path):
         feature_path = os.path.join(val_path, 'features/validation.h5')
         self.df = pd.read_hdf(feature_path)
-        
+
     def random_pairs(self, batch_size):
         n = len(self.df)
         while True:
             pairs = np.random.permutation(n)[:batch_size*2].reshape(-1,2)
             yield self.df.index.values[pairs], self.df.values[pairs]
+
+    def random_features(self, batch_size):
+        n = len(self.df)
+        while True:
+            features = np.random.permutation(n)[:batch_size]
+            yield self.df.index.values[features], self.df.values[features]

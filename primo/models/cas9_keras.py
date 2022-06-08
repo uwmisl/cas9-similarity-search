@@ -22,10 +22,10 @@ data_span = log10_ub - log10_lb
 def bandpass_hinge(x):
     return tf.maximum(log10_lb, tf.minimum(x, log10_ub))
 
-def log10_crispr_spec(seq_pairs, subpen, subtrans):
+def log10_crispr_spec(seq_pairs):
 
     # ensure that sequence pairs have dimension: (batch, 2 sequences, 20 nt, 4 channels)
-    seq_pairs.shape.assert_is_compatible_with([None, 2, 20, 4])
+    seq_pairs.shape.assert_is_compatible_with([None, 2, 20, 4]) #NEVER change shape to 80 or any other multiple of 20!
     seq_len = seq_pairs.shape[2]
 
     # separate first and sequences from each pair

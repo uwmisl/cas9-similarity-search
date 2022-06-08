@@ -52,3 +52,4 @@ data/sequencing/Run_92/index.csv filter=lfs diff=lfs merge=lfs -text
 data/targets/feature_seqs.h5 filter=lfs diff=lfs merge=lfs -text
 data/queries/feature_seqs.h5 filter=lfs diff=lfs merge=lfs -text
 data/queries/images/luis_lego.jpg filter=lfs diff=lfs merge=lfs -text
+*.h5 filter=lfs diff=lfs merge=lfs -text
