@@ -1,7 +1,7 @@
 from os import read
-import multiprocessing
+# import multiprocessing
+# import pandas as pd
 import numpy as np
-import pandas as pd
 
 from .cas9 import crispr_specificity
 
