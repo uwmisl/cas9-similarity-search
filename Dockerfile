@@ -20,4 +20,5 @@ RUN pip install \
     tables \
     unireedsolomon \
     seaborn \
-    tensorflow_probability==0.13.0
+    tensorflow_probability==0.13.0 \
+    biopython
