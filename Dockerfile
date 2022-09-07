@@ -21,4 +21,6 @@ RUN pip install \
     unireedsolomon \
     seaborn \
     tensorflow_probability==0.13.0 \
-    biopython
+    biopython \
+    fpdf
+
