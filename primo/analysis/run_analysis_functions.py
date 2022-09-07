@@ -1,27 +1,4 @@
-import os
-import gzip
-import shutil
-import csv
-from fpdf import FPDF
-import pandas as pd
-from tqdm import tqdm # for progress bar
-import matplotlib.pyplot as plt
 
-from Bio.SeqIO import parse
-from Bio.Seq import Seq
-from Bio import pairwise2
-
-
-SCORE_THRESH = 7 # my rule of thumb, this value is
-                # len(query) - 3
-                # for queries >= 20nt but less for shorter queries.
-                # Note that the score threshold will only return sequences
-                # with alignment score > threshold so if your query is 20nt
-                # your maximum alignment score will be 20
-
-MAX_READ_LEN = 500 # often the sequence aligner chokes on long sequences, this is the maximum
-                    # length a sequence is allowed to be in order to be analyzed, longer reads
-                    # are totally ignored
 
 
 def gz_extract(nanopore_data_path):
