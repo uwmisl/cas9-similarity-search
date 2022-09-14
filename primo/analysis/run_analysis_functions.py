@@ -1,15 +1,29 @@
-
+import os
+import gzip
+import shutil
+import csv
+from fpdf import FPDF
+import pandas as pd
+from tqdm import tqdm # for progress bar
+import matplotlib.pyplot as plt
+import random 
+from Bio.SeqIO import parse
+from Bio.Seq import Seq
+from Bio import pairwise2
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 
 def gz_extract(nanopore_data_path):
     """
-    For a given directory, unzip all .gz files in folder,
-    save unzipped files in folder and delete zipped files.
+    For a given directory, unzip all .gz files in its fastq_pass folder,
+    save unzipped files in folder.
     """
-    directory = nanopore_data_path + '/fastq_pass'
+    data_dir = '/fastq_pass'
+    directory = nanopore_data_path + data_dir
     extension = ".gz"
     os.chdir(directory)
-    for item in os.listdir(directory): # loop through items in dir
+    # print(os.getcwd())
+    for item in tqdm(os.listdir()): # loop through items in dir
         if item.endswith(extension): # check for ".gz" extension
             gz_name = os.path.abspath(item) # get full path of files
             file_name = (os.path.basename(gz_name)).rsplit('.',1)[0] #get file name for file within
@@ -30,7 +44,7 @@ def csv_to_dict(csv_file):
         results = dict(reader) # pull in each row as a key-val pair
     return results
 
-def get_aligned_seqs(dir_name, filename, query_dict, query_name, score_threshold):
+def get_aligned_seqs(filename, query_dict, query_name, score_threshold, MAX_READ_LEN):
     """
     Given:
      fastq filename/path with filename
@@ -45,29 +59,27 @@ def get_aligned_seqs(dir_name, filename, query_dict, query_name, score_threshold
         ex. | seq_ids | highest_score | seq    |
             |77c...9ab|     100       | ATCC...|
     """
-    file = open(dir_name + '/' + filename)
+    file = open(filename)
     query = Seq(query_dict[query_name])
 
-    records = parse(file, "fastq")
+    # records = parse(file, "fastq")
 
     scores = []
     aligned_seqs = []
     seq_ids = []
 
-    for record in records:
-        record_name =  record.name
-        seq = Seq(record.seq)
-        if len(seq) > MAX_READ_LEN:
+    for title, sequence, quality in FastqGeneralIterator(file):
+        if len(sequence) > MAX_READ_LEN:
             continue
         # perform alignment
-        alignments = pairwise2.align.localxs(seq, query, -2, -1)
+        alignments = pairwise2.align.localxs(sequence, query, -2, -1)
         for a in alignments:
             score = float(a[2])
             # record the sequence and sequence id if the score threshold is passed
             if score > score_threshold:
                 scores.append(score)
-                aligned_seqs.append(str(seq))
-                seq_ids.append(record_name)
+                aligned_seqs.append(str(sequence))
+                seq_ids.append(title.split(' ')[0])
                 # only record the highest alignment score for that sequence
                 if len(scores) > 1:
                     if seq_ids[-1] == seq_ids[-2]:
@@ -91,7 +103,19 @@ def get_aligned_seqs(dir_name, filename, query_dict, query_name, score_threshold
     file.close()
     return sequence_alignment_df
 
-def align_reads(target_dict, nanopore_data_path):
+def list_of_fastqs_to_analyze(prcnt_data):
+    # determine which fastq files to analyze
+    file_list = [i for i in os.listdir() if i.endswith('fastq')]
+    num_files = int(prcnt_data/float(100)*len(file_list)) +  1
+    files_to_analyze = random.sample(file_list, num_files)
+    return(files_to_analyze)
+
+def threaded_align_reads(target_dict, fastq_file, SCORE_THRESH, MAX_READ_LEN):
+    for query_name in target_dict:
+        alignment_df = get_aligned_seqs(fastq_file, target_dict, query_name, SCORE_THRESH, MAX_READ_LEN)
+    alignment_df.to_csv(f"aligned_{fastq_file}.csv")
+
+def align_reads(target_dict, data_path, SCORE_THRESH, MAX_READ_LEN, prcnt_data):
     """
     Given:
         A dictionary where the keys are target sequence IDs and values are DNA sequences,
@@ -101,22 +125,30 @@ def align_reads(target_dict, nanopore_data_path):
         Each row contains the read ID, highest alignment score, read sequence, and the target 
         sequence ID that aligned to it.
     """
-    nanopore_data_path = nanopore_data_path +  '/fastq_pass'
-
+    # nanopore_data_path = data_path +  '/fastq_pass'
+    
+    # determine which fastq files to analyze
+    file_list = [i for i in os.listdir() if i.endswith('fastq')]
+    if prcnt_data != 100:
+        num_files = int(prcnt_data/float(100)*len(file_list)) +  1
+        files_to_analyze = random.sample(file_list, num_files)
+    else:
+        files_to_analyze = file_list
+    
+    
     # loop through all queries
     file_count = 0
+    print('Each progress tick signals one query has been shown to all fastq files.')
     for query_name in tqdm(target_dict): #tqdm is the progress bar
         # loop through all fastq files
-        for item in os.listdir(nanopore_data_path):
-            if item.endswith('fastq'):
-                alignment_df = get_aligned_seqs(nanopore_data_path, \
-                                item, target_dict, query_name, SCORE_THRESH)
-                # add this fastq file's aligned sequences to the existing df
-                if file_count == 0:
-                    query_df = alignment_df
-                if file_count > 0:
-                    query_df = query_df.append(alignment_df)
-                file_count+=1
+        for item in files_to_analyze:
+            alignment_df = get_aligned_seqs(item, target_dict, query_name, SCORE_THRESH, MAX_READ_LEN)
+            # add this fastq file's aligned sequences to the existing df
+            if file_count == 0:
+                query_df = alignment_df
+            if file_count > 0:
+                query_df = query_df.append(alignment_df)
+            file_count+=1
 
     # make each rowname unique (important for plotting)
     query_df = query_df.reset_index()
@@ -145,20 +177,22 @@ def remove_duplicate_reads(data):
 
     return data
 
-def create_data_dir(CURRENT_DIR, date_label):
+def create_data_dir(date_label):
     """
+    Assuming we're working in the fastq_pass dir:
+
     Checks to see if a directory for generated data has been made. If not, creates a dir.
     If a dir already exists, does nothing.
     Returns:
         A string that is the data directory name.
     """
     # save to figure directory (make dir if not there, overwrite fig in old dir if already there)
-    dir_name = CURRENT_DIR + '/' + date_label + '_css_analysis'
+    dir_name = date_label + '_css_analysis'
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
     return dir_name
 
-def plot_target_freq(data, CURRENT_DIR, date_label):
+def plot_target_freq(data, date_label):
     """
     Given:
         Dataframe from align_reads or remove_duplicate_reads
@@ -173,7 +207,7 @@ def plot_target_freq(data, CURRENT_DIR, date_label):
     plt.tight_layout()
 
     # checks to see if a directory to store data exists, makes one if not
-    dir_name = create_data_dir(CURRENT_DIR, date_label)
+    dir_name = create_data_dir(date_label)
 
     # save figure, return string that is the path to the figure, including figure
     fig_path_name = dir_name + '/' + 'alignment_freq_barplot.png'
@@ -181,18 +215,17 @@ def plot_target_freq(data, CURRENT_DIR, date_label):
     plt.close()
     return fig_path_name
 
-def get_read_lens(dir):
+def get_read_lens():
     """
-    Given:
-        A string that is the path to the FASTQ_PASS dir
+    Assuming you're starting in the fastq_pass dir,
+
     Returns:
         A list that has the length of all reads in all Fastq files in that dir
     """
-    dir = dir + '/fastq_pass'
     lengths = []
-    for item in os.listdir(dir):
+    for item in os.listdir():
         if item.endswith('fastq'):
-            file = open(dir + '/' + item)
+            file = open(item)
             # get sequence data
             records = parse(file, "fastq")
             for record in records:
@@ -200,7 +233,7 @@ def get_read_lens(dir):
                 lengths.append(len(seq))
     return(lengths)
 
-def plot_len_distribution(lengths, CURRENT_DIR, date_label):
+def plot_len_distribution(lengths, date_label):
     """
     Given:
         A string that is the path to the FASTQ_PASS dir
@@ -215,7 +248,7 @@ def plot_len_distribution(lengths, CURRENT_DIR, date_label):
     plt.tight_layout()
 
     # checks to see if a directory to store data exists, makes one if not
-    dir_name = create_data_dir(CURRENT_DIR, date_label)
+    dir_name = create_data_dir(date_label)
 
     # save figure, return string that is the path to the figure, including figure
     fig_path_name = dir_name + '/' + 'all_read_lengths_barplot.png'
@@ -223,7 +256,7 @@ def plot_len_distribution(lengths, CURRENT_DIR, date_label):
     plt.close()
     return fig_path_name
 
-def plot_len_distribution_zoomed(lengths, CURRENT_DIR, date_label):
+def plot_len_distribution_zoomed(lengths, date_label, MAX_READ_LEN):
     """
     Given:
         A string that is the path to the FASTQ_PASS dir
@@ -240,7 +273,7 @@ def plot_len_distribution_zoomed(lengths, CURRENT_DIR, date_label):
     plt.tight_layout()
 
     # checks to see if a directory to store data exists, makes one if not
-    dir_name = create_data_dir(CURRENT_DIR, date_label)
+    dir_name = create_data_dir(date_label)
 
     # save figure, return string that is the path to the figure, including figure
     fig_path_name = dir_name + '/' + 'thresholded_read_lengths_barplot.png'
@@ -308,7 +341,7 @@ def calculate_enrichment_scores(df):
     ratios = ratios.apply(ratio)
     return ratios
 
-def plot_es_barplot(expt_ratios, initial_ratios, CURRENT_DIR, date_label):
+def plot_es_barplot(expt_ratios, initial_ratios, date_label):
     """
     Given:
         Two dataframes, each that lists all the sequence names and their ratios
@@ -324,7 +357,7 @@ def plot_es_barplot(expt_ratios, initial_ratios, CURRENT_DIR, date_label):
     plt.tight_layout()
 
     # checks to see if a directory to store data exists, makes one if not
-    dir_name = create_data_dir(CURRENT_DIR, date_label)
+    dir_name = create_data_dir(date_label)
 
     # save figure, return string that is the path to the figure, including figure
     fig_path_name = dir_name + '/' + 'enrichment_score_barplot.png'
