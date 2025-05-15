@@ -1,9 +1,14 @@
 # cas9-similarity-search
 DNA similarity search using Cas9
 
-## A visual overview
-You are currently in the `Cas9 Similarity Search` repository.
+# Repo overview
+The oligos ordered for the database can be found in database_oligs.csv
+
+The alignment data for the baseline database and experimental queried databases can be found in `data/sequencing.`
+
 The feature vectors we start with come from the preceding Open Images repository: https://github.com/uwmisl/primo-openimages
+
+The notebooks used for the simulated and experimental analyses in our paper are located in `notebooks`.
 
 # Connecting to jupyterlab in a docker
 
